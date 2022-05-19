@@ -17,9 +17,14 @@
 
 - name: "Deploy NetApp Trident"
   hosts: kube-master
-  become: true
-  become_method: sudo
+  become: false
   vars_files:
-    - ../../config/group_vars/netapp-trident.yml
-  roles:
-    - role: netapp-trident
+  - ../../config/group_vars/k8s-cluster.yml
+  - ../../config/group_vars/netapp-trident.yml
+  tasks:
+  - name: Include netapp trident role
+    run_once: true
+    include_role:
+      name: netapp-trident
+      # apply:
+      #   delegate_to: localhost

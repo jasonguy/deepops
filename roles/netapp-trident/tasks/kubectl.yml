@@ -1,0 +1,62 @@
+---
+# shamelessly copied the tasks from the k8s playbook. ;)
+- name: check for kubectl
+  stat:
+    path: "{{ artifacts_dir }}/kubectl"
+  register: kubectl_local
+  become: no
+  delegate_to: localhost
+  run_once: true
+- name: copy kubectl to /usr/local/bin
+  copy:
+    src: "{{ artifacts_dir }}/kubectl"
+    dest: "/usr/local/bin/kubectl"
+  when: kubectl_local.stat.exists
+  become: yes
+  ignore_errors: yes
+  register: kubectl_copied
+  delegate_to: localhost
+  run_once: true
+- name: check for copied kubectl
+  stat:
+    path: "/usr/local/bin/kubectl"
+  register: kubectl_system
+  delegate_to: localhost
+  run_once: true
+- name: modify kubectl permissions
+  file:
+    path: "/usr/local/bin/kubectl"
+    owner: root
+    group: root
+    mode: '0755'
+  become: yes
+  ignore_errors: yes
+  when: kubectl_system.stat.exists
+  delegate_to: localhost
+  run_once: true
+- name: manually move kubectl binary
+  debug:
+    msg: "Unable to move kubectl, run: sudo cp {{ artifacts_dir | realpath }}/kubectl /usr/local/bin"
+  when: kubectl_copied is failed
+  delegate_to: localhost
+  run_once: true
+- name: create kube config directory for current user
+  file:
+    path: "{{ lookup('env','HOME') + '/.kube/' }}"
+    state: directory
+  delegate_to: localhost
+  run_once: true
+- name: check for kube config file
+  stat:
+    path: "{{ artifacts_dir }}/admin.conf"
+  register: kubeconf
+  delegate_to: localhost
+  run_once: true
+- name: copy kube config file for current user
+  copy:
+    src: "{{ artifacts_dir }}/admin.conf"
+    dest: "{{ lookup('env','HOME') + '/.kube/config' }}"
+    backup: yes
+  when: kubeconf.stat.exists
+  delegate_to: localhost
+  run_once: true
