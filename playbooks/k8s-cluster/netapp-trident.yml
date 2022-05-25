@@ -23,8 +23,5 @@
   - ../../config/group_vars/netapp-trident.yml
   tasks:
   - name: Include netapp trident role
-    run_once: true
     include_role:
       name: netapp-trident
-      # apply:
-      #   delegate_to: localhost

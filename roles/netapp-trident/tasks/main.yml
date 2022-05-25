@@ -10,6 +10,7 @@
     src: namespace.j2
     dest: '{{ artifacts_dir }}/trident-installer/namespace.yaml'
     mode: "0644"
+  run_once: true
 
 - name: Create Trident namespace
   kube:
@@ -17,9 +18,11 @@
     resource: Namespace
     name: trident
     filename: '{{ artifacts_dir }}/trident-installer/namespace.yaml'
+  run_once: true
 
 - name: Install Trident using Helm
   command: '/usr/local/bin/helm -n {{ trident_namespace }} install trident {{ artifacts_dir }}/trident-installer/helm/trident-operator-{{ trident_version }}.tgz'
+  run_once: true
   changed_when: false
 
 - name: Copy backend config file(s) to control node
@@ -29,6 +32,7 @@
     mode: "0644"
   with_items: '{{ backends_to_create }}'
   when: create_backends
+  run_once: true
 
 - name: Create Trident backend(s)
   command: '{{ artifacts_dir }}/trident-installer/tridentctl -n {{ trident_namespace }} create backend -f {{ deepops_dir }}/trident-installer/backend-{{ item.backendName }}.json'
@@ -38,6 +42,7 @@
   register: result
   until: result.rc == 0
   when: create_backends
+  run_once: true
 
 - name: Copy StorageClass config file(s) to control node
   copy:
@@ -46,6 +51,7 @@
     mode: "0644"
   with_items: '{{ storageClasses_to_create }}'
   when: create_StorageClasses
+  run_once: true
 
 - name: Create StorageClasses
   kube:
@@ -55,6 +61,7 @@
     filename: '{{ artifacts_dir }}/trident-installer/sc-{{ item.metadata.name }}.yaml'
   with_items: '{{ storageClasses_to_create }}'
   when: create_StorageClasses
+  run_once: true
 
 - name: Create volume snapshot CRDs
   kube:
@@ -62,6 +69,7 @@
     filename: '{{ item }}'
   with_items: '{{ volume_snapshot_CRD_manifest_URLs }}'
   when: enable_volume_snapshots
+  run_once: true
 
 - name: Create snapshot controller
   kube:
@@ -69,6 +77,7 @@
     filename: '{{ item }}'
   with_items: '{{ snapshot_controller_manifest_URLs }}'
   when: enable_volume_snapshots
+  run_once: true
 
 - name: Copy volume snapshot class config file(s) to control node
   copy:
@@ -77,6 +86,7 @@
     mode: "0644"
   with_items: '{{ volume_snapshot_classes_to_create }}'
   when: enable_volume_snapshots
+  run_once: true
 
 - name: Create volume snapshot classes
   kube:
@@ -86,3 +96,4 @@
     filename: '{{ artifacts_dir }}/trident-installer/snapclass-{{ item.metadata.name }}.yaml'
   with_items: '{{ volume_snapshot_classes_to_create }}'
   when: enable_volume_snapshots
+  run_once: true

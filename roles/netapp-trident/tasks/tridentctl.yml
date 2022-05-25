@@ -1,5 +1,5 @@
 ---
-# tridentctl depends on kubectl and kubeconfig config
+# tridentctl depends on kubectl and kubeconfig
 - name: check for kubectl
   stat:
     path: "/usr/local/bin/kubectl"
@@ -18,6 +18,7 @@
     remote_src: yes
   delegate_to: localhost
   run_once: true
+
 - name: copy tridentctl to /usr/local/bin
   copy:
     src: "{{ artifacts_dir }}/tridentctl"
@@ -28,12 +29,14 @@
   register: tridentctl_copied
   delegate_to: localhost
   run_once: true
+
 - name: check for copied tridentctl
   stat:
     path: "/usr/local/bin/tridentctl"
   register: tridentctl_system
   delegate_to: localhost
   run_once: true
+
 - name: modify tridentctl permissions
   file:
     path: "/usr/local/bin/tridentctl"
@@ -45,6 +48,7 @@
   when: tridentctl_system.stat.exists
   delegate_to: localhost
   run_once: true
+
 - name: manually move tridentctl binary
   debug:
     msg: "Unable to move tridentctl, run: sudo cp {{ artifacts_dir | realpath }}/tridentctl /usr/local/bin"
@@ -52,13 +56,13 @@
   delegate_to: localhost
   run_once: true
 
-# copy from localhost to kube-masters
-- name: Copy tridentctl to the k8s control nodes
-  ansible.builtin.copy:
-    src: /usr/local/bin/tridentctl
-    dest: /usr/local/bin/tridentctl
-    owner: root
-    group: root
-    mode: '0755'
-  when: tridentctl_system.stat.exists and copy_tridentctl_to_kube_master
-  run_once: false
+# copy from localhost to kube-masters - Not sure this is necessary
+# - name: Copy tridentctl to the k8s control nodes
+#   ansible.builtin.copy:
+#     src: /usr/local/bin/tridentctl
+#     dest: /usr/local/bin/tridentctl
+#     owner: root
+#     group: root
+#     mode: '0755'
+#   when: tridentctl_system.stat.exists and copy_tridentctl_to_kube_master
+#   run_once: false
